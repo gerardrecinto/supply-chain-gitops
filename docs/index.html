@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>supply-chain-gitops | Gate the release, deploy by digest</title>
+<meta name="description" content="Release gate for SBOMs and scan reports, SonarQube and feature flag guardrails, JFrog promotion scripts, and Argo CD GitOps overlays.">
+<link rel="canonical" href="https://gerardrecinto.github.io/supply-chain-gitops/"><link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="theme-color" content="#0a0f1c">
+<meta property="og:type" content="website"><meta property="og:title" content="supply-chain-gitops | Gate the release, deploy by digest"><meta property="og:description" content="Release gate for SBOMs and scan reports, SonarQube and feature flag guardrails, JFrog promotion scripts, and Argo CD GitOps overlays."><meta property="og:url" content="https://gerardrecinto.github.io/supply-chain-gitops/">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="supply-chain-gitops | Gate the release, deploy by digest"><meta name="twitter:description" content="Release gate for SBOMs and scan reports, SonarQube and feature flag guardrails, JFrog promotion scripts, and Argo CD GitOps overlays.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f9fc;--surface:#fff;--border:#d8dfeb;--fg:#0f172a;--muted:#475569;--acc:#059669;--acc-fg:#fff;--risk:#b45309;--code:#0b1220;--code-fg:#dbe4f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0a0f1c;--surface:#111a2e;--border:#22304e;--fg:#e8edf7;--muted:#9aa8c2;--acc:#34d399;--acc-fg:#04130d;--risk:#fbbf24;--code:#070b15;--code-fg:#dbe4f5}}
+:root[data-theme=dark]{--bg:#0a0f1c;--surface:#111a2e;--border:#22304e;--fg:#e8edf7;--muted:#9aa8c2;--acc:#34d399;--acc-fg:#04130d;--risk:#fbbf24;--code:#070b15;--code-fg:#dbe4f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.6 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.mono,code,pre{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--acc)}a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:var(--acc-fg);padding:8px 12px;border-radius:8px;z-index:20}.skip:focus{left:8px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px}
+.brand{font:600 14px 'JetBrains Mono',monospace;color:var(--fg);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{display:flex;gap:4px;font:500 13px 'JetBrains Mono',monospace}nav a{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:8px}nav a:hover{color:var(--fg);background:var(--surface)}
+@media(max-width:640px){nav a.opt{display:none}}
+.hero{padding-top:72px;padding-bottom:40px}.eyebrow{font:500 13px 'JetBrains Mono',monospace;color:var(--acc);letter-spacing:.04em;text-transform:uppercase;margin:0 0 16px}
+h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.08;letter-spacing:-.03em;font-weight:800;margin:0 0 20px;max-width:16em}
+.sub{font-size:1.15rem;color:var(--muted);max-width:42em;margin:0 0 28px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;font:600 15px Inter,sans-serif;text-decoration:none;border:1px solid var(--border);color:var(--fg);background:var(--surface)}
+.btn.p{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}.btn:hover{filter:brightness(1.06)}
+.term{margin:36px 0 0;background:var(--code);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.term .bar{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #1c2740;font:500 12px 'JetBrains Mono',monospace;color:#8da0c4}
+.term pre{margin:0;padding:16px;overflow-x:auto;color:var(--code-fg);font-size:13.5px;line-height:1.65}
+.term .ok{color:#34d399}.term .bad{color:#fbbf24}.term .dim{color:#7f8fb0}
+section{padding:56px 0;border-top:1px solid var(--border)}
+h2{font-size:clamp(1.5rem,3.4vw,2.1rem);line-height:1.2;letter-spacing:-.02em;font-weight:800;margin:0 0 12px;max-width:24em}
+.lead{color:var(--muted);max-width:42em;margin:0 0 28px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}.card h3{margin:0 0 6px;font-size:1.02rem}.card p{margin:0;color:var(--muted);font-size:.95rem}.card .f{display:block;margin-top:10px;font:500 12px 'JetBrains Mono',monospace;color:var(--acc);overflow-wrap:anywhere}
+.cmd{position:relative}.cmd pre{margin:0;padding:18px 70px 18px 18px;background:var(--code);color:var(--code-fg);border:1px solid var(--border);border-radius:14px;overflow-x:auto;font-size:13.5px;line-height:1.7}
+.copy{position:absolute;top:10px;right:10px;min-height:36px;padding:0 12px;border-radius:8px;border:1px solid #2a3858;background:#111a2e;color:#cbd6ee;font:600 12px 'JetBrains Mono',monospace;cursor:pointer}
+.two{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.box{border-radius:14px;padding:22px;border:1px solid var(--border);background:var(--surface)}.box h3{margin:0 0 10px;font:600 13px 'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.box.g h3{color:var(--acc)}.box.a h3{color:var(--risk)}.box ul{margin:0;padding-left:18px;color:var(--muted);font-size:.95rem}.box li{margin:6px 0}
+details{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 18px;margin:10px 0}summary{cursor:pointer;padding:16px 0;font-weight:600;list-style:none}summary::-webkit-details-marker{display:none}summary::after{content:'+';float:right;color:var(--acc);font-family:'JetBrains Mono',monospace}details[open] summary::after{content:'-'}details p{margin:0 0 16px;color:var(--muted)}
+footer{padding:40px 0 56px;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem}footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="wrap"><a class="brand" href="./">supply-chain-gitops</a>
+<nav aria-label="Main"><a class="opt" href="#what">What it does</a><a class="opt" href="#run">Run it</a><a href="#real">Real vs not</a><a href="https://github.com/gerardrecinto/supply-chain-gitops">GitHub</a></nav></div></header>
+<main id="main">
+<div class="wrap hero">
+<p class="eyebrow">Supply chain, GitOps, JFrog, Argo CD</p>
+<h1>Block the release before a fixable vulnerability or a brand-new package ships.</h1>
+<p class="sub">A policy gate for SBOMs and scan reports, a SonarQube check, flag rollout guardrails, JFrog promotion, and GitOps overlays where production only ever pins an image digest.</p>
+<div class="btns"><a class="btn p" href="#run">Run it in a minute</a><a class="btn" href="https://github.com/gerardrecinto/supply-chain-gitops">View on GitHub</a></div>
+<div class="term" role="figure" aria-label="Real output from the repo"><div class="bar"><span>python -m gate.policy sbom.json findings.json</span><span>real output, captured Nov 13, 2026</span></div><pre><span class="dim">$ python -m gate.policy sbom.json findings.json</span>
+<span class="bad">BLOCK vuln-fixable      pkg:maven/org.springframework/spring-web@6.1.0 CVE-2024-0001 fixed in 6.1.14</span>
+<span class="bad">BLOCK license           pkg:npm/left-padder@2.0.0 AGPL-3.0</span>
+<span class="bad">BLOCK curation-too-new  pkg:npm/left-padder@2.0.0 published 1d ago</span>
+<span class="bad">blocked</span>
+<span class="dim">$ echo $?</span>
+1</pre></div>
+</div>
+<section id="what"><div class="wrap"><h2>Every gate fails closed and says why.</h2><p class="lead">Each check is plain code you can read, test, and run in any pipeline.</p><div class="grid"><div class="card"><h3>Release gate</h3><p>Reads a CycloneDX SBOM and a scan report. Blocks fixable high and critical findings, denied licenses, unpinned components, and versions published in the last 7 days.</p><span class="f">gate/policy.py</span></div><div class="card"><h3>SonarQube gate</h3><p>Fails the build unless the project quality gate is OK, and prints the failed conditions.</p><span class="f">gate/sonar.py</span></div><div class="card"><h3>Flag guardrails</h3><p>Checks a rollout plan: owner, kill switch, staging first, production starts at 1 or 5 percent and never goes backwards.</p><span class="f">flags/validate.py</span></div><div class="card"><h3>JFrog</h3><p>An Xray policy that blocks fixable high findings, and a script that scans a build and then promotes it.</p><span class="f">jfrog/, scripts/promote.sh</span></div><div class="card"><h3>GitOps with Argo CD</h3><p>Kustomize base with dev and prod overlays. Dev syncs itself, prod waits for a person. Prod pins an image digest, never a tag.</p><span class="f">gitops/</span></div><div class="card"><h3>Pipelines on three platforms</h3><p>Azure DevOps, Harness with an approval stage, and GitHub Actions.</p><span class="f">ci/, .github/workflows</span></div></div></div></section>
+<section id="run"><div class="wrap"><h2>Run it from a clean checkout.</h2><p class="lead">Python 3 and pytest run the gates. kubectl renders the overlays.</p>
+<div class="cmd"><pre id="cmd">git clone https://github.com/gerardrecinto/supply-chain-gitops
+cd supply-chain-gitops
+python -m pytest -q tests
+python -m gate.policy sbom.json findings.json   # blocked on purpose
+kubectl kustomize gitops/overlays/prod</pre><button class="copy" data-for="cmd" type="button">Copy</button></div></div></section>
+<section id="real"><div class="wrap"><h2>What is real, and what is not verified.</h2><p class="lead">Every claim on this page comes from a command that ran. Anything that did not run is listed on the right.</p>
+<div class="two"><div class="box g"><h3>Verified</h3><ul><li>6 tests pass: policy rules, flag guardrails, and the SonarQube client against a local stub server.</li><li>The sample SBOM is blocked for a fixable high CVE, a denied license and a too-new package.</li><li>Both Kustomize overlays render, and prod renders the image as @sha256. shellcheck and terraform fmt are clean.</li></ul></div><div class="box a"><h3>Not verified</h3><ul><li>No JFrog, SonarQube, LaunchDarkly, Harness, Argo CD or Azure DevOps instance was available. Those files come from product docs and were not applied.</li><li>terraform validate and the PowerShell runner audit were not run.</li><li>The prod digest is a placeholder. The CI job that writes the real one is not included.</li></ul></div></div></div></section>
+<section id="faq"><div class="wrap"><h2>Questions before you try it.</h2><details><summary>Why block versions published in the last 7 days?</summary><p>Malicious or broken releases are usually caught within days. A short age floor is the same idea as JFrog Curation at the proxy. An allow list covers the exceptions.</p></details><details><summary>Why is prod pinned to a digest?</summary><p>A tag can be re-pushed. A digest cannot, so what Argo CD deploys is exactly what was scanned and signed.</p></details><details><summary>Does this replace Xray or SonarQube?</summary><p>No. It reads their output and decides. The gate logic is small on purpose so it is easy to review.</p></details></div></section>
+</main>
+<footer><div class="wrap"><span>Built by <a href="https://github.com/gerardrecinto">Gerard Recinto</a>. A personal lab project, not a product.</span><span><a href="https://github.com/gerardrecinto/supply-chain-gitops">Source</a> &middot; <a href="https://github.com/gerardrecinto/supply-chain-gitops/issues">Issues</a></span></div></footer>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){b.addEventListener('click',function(){
+ var t=document.getElementById(b.getAttribute('data-for')).innerText;
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1500)},function(){b.textContent='Select + copy'});
+});});
+</script>
+</body></html>
