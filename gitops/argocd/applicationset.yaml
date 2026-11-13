@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: app
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - { env: dev, cluster: https://kubernetes.default.svc, auto: "true" }
+          - { env: prod, cluster: https://prod.example.com, auto: "false" }
+  template:
+    metadata:
+      name: "app-{{.env}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/example/supply-chain-gitops.git
+        targetRevision: main
+        path: "gitops/overlays/{{.env}}"
+      destination:
+        server: "{{.cluster}}"
+        namespace: "app-{{.env}}"
+      syncPolicy:
+        syncOptions: [CreateNamespace=true]
+  # Dev syncs itself. Prod waits for a person to press sync, and prune is off by default.
+  templatePatch: |
+    {{- if eq .auto "true" }}
+    spec:
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+    {{- end }}

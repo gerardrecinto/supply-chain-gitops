@@ -1,0 +1,27 @@
+trigger: { branches: { include: [main] } }
+pool: { vmImage: ubuntu-latest }
+variables:
+  - group: supply-chain   # JFROG_URL, SONAR_URL, set as secret variables there
+stages:
+  - stage: Verify
+    jobs:
+      - job: gates
+        steps:
+          - script: python -m pip install pytest && python -m pytest -q tests
+            displayName: Gate unit tests
+          - script: python -m gate.sonar "$(SONAR_URL)" "$(Build.Repository.Name)"
+            displayName: SonarQube quality gate
+            env: { SONAR_TOKEN: $(SONAR_TOKEN) }
+          - script: python -m gate.policy sbom.json findings.json
+            displayName: SBOM and vulnerability policy
+          - script: python -m flags.validate flags/rollout.json
+            displayName: Flag rollout guardrails
+  - stage: Promote
+    dependsOn: Verify
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: promote
+        steps:
+          - script: scripts/promote.sh "$(JFROG_URL)" "app" "$(Build.BuildId)"
+            displayName: Promote in Artifactory
+            env: { JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN) }

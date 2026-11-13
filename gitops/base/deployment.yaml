@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: app }
+  template:
+    metadata:
+      labels: { app: app }
+    spec:
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: app
+          image: registry.example.com/team/app:0.0.0   # pinned by digest in each overlay
+          ports: [{ containerPort: 8080 }]
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] }, readOnlyRootFilesystem: true }

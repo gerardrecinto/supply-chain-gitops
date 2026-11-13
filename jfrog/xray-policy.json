@@ -1,0 +1,11 @@
+{
+  "name": "block-fixable-high",
+  "type": "security",
+  "rules": [
+    {
+      "name": "high-or-critical-with-fix",
+      "criteria": { "min_severity": "high", "fix_version_dependant": true },
+      "actions": { "block_download": { "active": true, "unscanned": false }, "fail_build": true }
+    }
+  ]
+}

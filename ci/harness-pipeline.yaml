@@ -1,0 +1,45 @@
+pipeline:
+  name: supply-chain
+  identifier: supply_chain
+  projectIdentifier: platform
+  orgIdentifier: default
+  stages:
+    - stage:
+        name: verify
+        identifier: verify
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform: { os: Linux, arch: Amd64 }
+          runtime: { type: Cloud, spec: {} }
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: gate tests
+                  identifier: gate_tests
+                  spec:
+                    shell: Bash
+                    command: python -m pip install pytest && python -m pytest -q tests
+              - step:
+                  type: Run
+                  name: sbom policy
+                  identifier: sbom_policy
+                  spec:
+                    shell: Bash
+                    command: python -m gate.policy sbom.json findings.json
+    - stage:
+        name: promote
+        identifier: promote
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: HarnessApproval
+                  name: release approval
+                  identifier: release_approval
+                  timeout: 1d
+                  spec:
+                    approvers: { userGroups: [platform_release], minimumCount: 1 }
+                    approvalMessage: Promote to production?

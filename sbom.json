@@ -1,0 +1,4 @@
+{"bomFormat": "CycloneDX", "components": [
+  {"purl": "pkg:maven/org.springframework/spring-web@6.1.0", "licenses": [{"license": {"id": "Apache-2.0"}}], "published": "2023-11-16T00:00:00Z"},
+  {"purl": "pkg:npm/left-padder@2.0.0", "licenses": [{"license": {"id": "AGPL-3.0"}}], "published": "2026-11-12T00:00:00Z"}
+]}

@@ -1,0 +1,1 @@
+[{"component": "pkg:maven/org.springframework/spring-web@6.1.0", "cve": "CVE-2024-0001", "severity": "High", "fixed_version": "6.1.14"}]
